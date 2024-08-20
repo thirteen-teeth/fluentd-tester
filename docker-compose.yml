@@ -1,0 +1,79 @@
+---
+# poc to compare fluentd and fluent-bit & their metrics
+services:
+  fluentd:
+    # image: fluent/fluentd:v1.17
+    build: ./fluentd
+    container_name: fluentd
+    ports:
+      - "24224:24224"
+      - "24231:24231"
+      - "24220:24220"
+    volumes:
+      - ./fluentd:/fluentd/etc
+    environment:
+      - FLUENTD_CONF=fluentd.conf
+    command: ["fluentd", "-c", "/fluentd/etc/fluentd.conf"]
+  fluent-bit:
+    image: fluent/fluent-bit:1.8
+    container_name: fluent-bit
+    ports:
+      - "2020:2020"
+      - "2021:2021"
+      - "8080:8080"
+    volumes:
+      - ./fluent-bit:/fluent-bit/etc
+    environment:
+      - FLUENTD_CONF=fluent-bit.conf
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus:/etc/prometheus
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    # volumes:
+    #   - ./grafana:/etc/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_USERS_ALLOW_ORG_CREATE=false
+      - GF_USERS_AUTO_ASSIGN_ORG=true
+      - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Editor
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_AUTH_ANONYMOUS_ORG_NAME=Main Org.
+      - GF_AUTH_ANONYMOUS_USER=true
+      - GF_AUTH_ANONYMOUS_USER_ORG_ROLE=Viewer
+      - GF_AUTH_ANONYMOUS_USER_ORG_NAME=Main Org.
+    command: ["--config=/etc/grafana/grafana.ini"]
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0 # last image before you need to sent pw with env var
+    container_name: opensearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - "discovery.type=single-node"
+  filebeat:
+    # image: docker.elastic.co/beats/filebeat:7.15.0
+    image: docker.elastic.co/beats/filebeat:8.14.3
+    container_name: filebeat
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./filebeat/test-file.log:/var/log/test-file.log
+    command: ["-e", "-strict.perms=false"]
+  logstash:
+    image: docker.elastic.co/logstash/logstash-oss:8.14.1
+    container_name: logstash
+    volumes:
+      - ./logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - "514:514"
+    command: ["-f", "/usr/share/logstash/pipeline/logstash.conf", "--config.reload.automatic"]

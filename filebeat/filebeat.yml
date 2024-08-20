@@ -1,0 +1,16 @@
+---
+#filebeat inputs
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/test-file.log
+# add the `@log_group` field to the event
+processors:
+  - add_fields:
+      target: ''
+      fields:
+        '@log_group': "filebeat"
+# output to logstash
+output.logstash:
+  hosts: ['fluentd:5044']

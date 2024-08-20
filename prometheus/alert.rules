@@ -1,0 +1,5 @@
+groups:
+  - name: example
+    rules:
+    - record: fluentd_input_status_num_records
+      expr: sum by (tag) (rate(fluentd_input_status_num_records_total[1m]))

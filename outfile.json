@@ -1,0 +1,150 @@
+{
+  "plugins": [
+    {
+      "plugin_id": "object:cd0",
+      "plugin_category": "input",
+      "type": "forward",
+      "config": {
+        "@type": "forward",
+        "port": "24224",
+        "bind": "0.0.0.0",
+        "tag": "forward"
+      },
+      "output_plugin": false,
+      "retry_count": null,
+      "emit_records": 0,
+      "emit_size": 0
+    },
+    {
+      "plugin_id": "object:ce4",
+      "plugin_category": "input",
+      "type": "monitor_agent",
+      "config": {
+        "@type": "monitor_agent",
+        "bind": "0.0.0.0",
+        "port": "24220"
+      },
+      "output_plugin": false,
+      "retry_count": null,
+      "emit_records": 0,
+      "emit_size": 0
+    },
+    {
+      "plugin_id": "object:cf8",
+      "plugin_category": "input",
+      "type": "prometheus",
+      "config": {
+        "@type": "prometheus",
+        "port": "24231",
+        "metrics_path": "/metrics"
+      },
+      "output_plugin": false,
+      "retry_count": null,
+      "emit_records": 0,
+      "emit_size": 0
+    },
+    {
+      "plugin_id": "object:d0c",
+      "plugin_category": "input",
+      "type": "prometheus_monitor",
+      "config": {
+        "@type": "prometheus_monitor"
+      },
+      "output_plugin": false,
+      "retry_count": null,
+      "emit_records": 0,
+      "emit_size": 0
+    },
+    {
+      "plugin_id": "object:d20",
+      "plugin_category": "input",
+      "type": "prometheus_output_monitor",
+      "config": {
+        "@type": "prometheus_output_monitor"
+      },
+      "output_plugin": false,
+      "retry_count": null,
+      "emit_records": 0,
+      "emit_size": 0
+    },
+    {
+      "plugin_id": "object:8fc",
+      "plugin_category": "output",
+      "type": "copy",
+      "config": {
+        "@type": "copy"
+      },
+      "output_plugin": false,
+      "retry_count": 0
+    },
+    {
+      "plugin_id": "object:910",
+      "plugin_category": "output",
+      "type": "prometheus",
+      "config": {
+        "@type": "prometheus"
+      },
+      "output_plugin": true,
+      "retry_count": 0,
+      "emit_records": 6,
+      "emit_size": 0,
+      "emit_count": 6,
+      "write_count": 0,
+      "rollback_count": 0,
+      "slow_flush_count": 0,
+      "flush_time_count": 0,
+      "retry": {}
+    },
+    {
+      "plugin_id": "object:924",
+      "plugin_category": "output",
+      "type": "stdout",
+      "config": {
+        "@type": "stdout"
+      },
+      "output_plugin": true,
+      "retry_count": 0,
+      "emit_records": 6,
+      "emit_size": 0,
+      "emit_count": 6,
+      "write_count": 0,
+      "rollback_count": 0,
+      "slow_flush_count": 0,
+      "flush_time_count": 0,
+      "retry": {}
+    },
+    {
+      "plugin_id": "object:ca8",
+      "plugin_category": "output",
+      "type": "opensearch",
+      "config": {
+        "@type": "opensearch",
+        "host": "opensearch",
+        "port": "9200",
+        "scheme": "https",
+        "user": "admin",
+        "password": "xxxxxx",
+        "index_name": "fluentd",
+        "ssl_verify": "false",
+        "include_timestamp": "true"
+      },
+      "output_plugin": true,
+      "buffer_queue_length": 0,
+      "buffer_timekeys": [],
+      "buffer_total_queued_size": 0,
+      "retry_count": 0,
+      "emit_records": 6,
+      "emit_size": 0,
+      "emit_count": 6,
+      "write_count": 2,
+      "rollback_count": 0,
+      "slow_flush_count": 0,
+      "flush_time_count": 43,
+      "buffer_stage_length": 0,
+      "buffer_stage_byte_size": 0,
+      "buffer_queue_byte_size": 0,
+      "buffer_available_buffer_space_ratios": 100,
+      "retry": {}
+    }
+  ]
+}
