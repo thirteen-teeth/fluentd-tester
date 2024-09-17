@@ -1,5 +1,4 @@
-# v1.17 container image has a bug with Prometheus plugin https://github.com/fluent/fluentd/issues/4576
-FROM fluent/fluentd:v1.16.5-1.0
+FROM fluent/fluentd:v1.17.1-1.0
 # Use root account to use apk
 USER root
 

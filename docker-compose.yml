@@ -2,18 +2,27 @@
 # poc to compare fluentd and fluent-bit & their metrics
 services:
   fluentd:
-    # image: fluent/fluentd:v1.17
     build: ./fluentd
     container_name: fluentd
     ports:
       - "24224:24224"
       - "24231:24231"
-      - "24220:24220"
     volumes:
       - ./fluentd:/fluentd/etc
     environment:
       - FLUENTD_CONF=fluentd.conf
     command: ["fluentd", "-c", "/fluentd/etc/fluentd.conf"]
+  fluentd-client:
+    build: ./fluentd
+    container_name: fluentd-client
+    ports:
+      - "24225:24225"
+      - "24232:24232"
+    volumes:
+      - ./fluentd:/fluentd/etc
+    environment:
+      - FLUENTD_CONF=fluentd-client.conf
+    command: ["fluentd", "-c", "/fluentd/etc/fluentd-client.conf"]
   fluent-bit:
     image: fluent/fluent-bit:1.8
     container_name: fluent-bit
@@ -26,7 +35,7 @@ services:
     environment:
       - FLUENTD_CONF=fluent-bit.conf
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.54.1
     container_name: prometheus
     ports:
       - "9090:9090"
