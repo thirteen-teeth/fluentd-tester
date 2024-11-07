@@ -1,0 +1,28 @@
+---
+service:
+  flush: 1
+  daemon: 'Off'
+  log_level: info
+  http_server: 'On'
+  http_listen: 0.0.0.0
+  http_port: 2020
+pipeline:
+  inputs:
+  - name: http
+    port: 8080
+    alias: http_input
+  - name: fluentbit_metrics
+    tag: internal_metrics
+    scrape_interval: 2
+  outputs:
+  # internal_metrics as prometheus exposes more metrics than built-in HTTP server
+  - name: prometheus_exporter
+    match: internal_metrics
+    host: 0.0.0.0
+    port: 2021
+    alias: prometheus
+  - name: forward
+    match: logs.*
+    host: fluentd
+    port: 24224
+    alias: forward-fluentd

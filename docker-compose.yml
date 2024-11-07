@@ -11,7 +11,7 @@ services:
       - ./fluentd:/fluentd/etc
     environment:
       - FLUENTD_CONF=fluentd.conf
-    command: ["fluentd", "-c", "/fluentd/etc/fluentd.conf"]
+    command: ["fluentd", "-c", "/fluentd/etc/fluentd-server.conf"]
   fluentd-client:
     build: ./fluentd
     container_name: fluentd-client
@@ -24,7 +24,7 @@ services:
       - FLUENTD_CONF=fluentd-client.conf
     command: ["fluentd", "-c", "/fluentd/etc/fluentd-client.conf"]
   fluent-bit:
-    image: fluent/fluent-bit:1.8
+    image: fluent/fluent-bit:3.1.9
     container_name: fluent-bit
     ports:
       - "2020:2020"
@@ -32,8 +32,7 @@ services:
       - "8080:8080"
     volumes:
       - ./fluent-bit:/fluent-bit/etc
-    environment:
-      - FLUENTD_CONF=fluent-bit.conf
+    command: ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.yml"]
   prometheus:
     image: prom/prometheus:v2.54.1
     container_name: prometheus
@@ -70,6 +69,15 @@ services:
       - "9300:9300"
     environment:
       - "discovery.type=single-node"
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0 # Make sure the version of opensearch-dashboards matches the version of opensearch installed on other nodes
+    container_name: opensearch-dashboards
+    ports:
+      - 5601:5601 # Map host port 5601 to container port 5601
+    expose:
+      - "5601" # Expose port 5601 for web access to OpenSearch Dashboards
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch:9200"]' # Define the OpenSearch nodes that OpenSearch Dashboards will query
   filebeat:
     # image: docker.elastic.co/beats/filebeat:7.15.0
     image: docker.elastic.co/beats/filebeat:8.14.3
