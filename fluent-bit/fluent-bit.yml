@@ -1,28 +1,66 @@
 ---
 service:
-  flush: 1
+  flush: 10
   daemon: 'Off'
   log_level: info
   http_server: 'On'
   http_listen: 0.0.0.0
   http_port: 2020
+  parsers_file: parsers.conf
+  hot_reload: 'On'
+
 pipeline:
   inputs:
   - name: http
-    port: 8080
+    port: 8888
     alias: http_input
+    tag: logs.http
   - name: fluentbit_metrics
     tag: internal_metrics
     scrape_interval: 2
+  filters:
+  - name: parser
+    match: .*
+    key_name: log
+    parser: default
+  # rename @log_group to log_group - easier to work with
+  - name: modify
+    match: logs.*
+    condition:
+    - Key_Exists @log_group
+    rename:
+    - '@log_group log_group'
+  # check for log_group - if not present, add it
+  - name: modify
+    match: logs.*
+    condition:
+    - Key_Does_Not_Exist log_group
+    set: 'log_group unset-log_group'
+  # create custom prometheus counter for logs by log_group, the first flush intervala new 
+  # value is seen it initializes the counter at 1 so count does not match with other systems _exactly_
+  - name: log_to_metrics
+    match: logs.*
+    tag: counters.log_group
+    metric_mode: counter
+    metric_name: log_group_total
+    metric_description: 'Total logs by log_group'
+    label_field: 'log_group'
+    add_label: tag $tag
   outputs:
   # internal_metrics as prometheus exposes more metrics than built-in HTTP server
   - name: prometheus_exporter
-    match: internal_metrics
+    match_regex: (internal_metrics|counters).*
     host: 0.0.0.0
     port: 2021
     alias: prometheus
-  - name: forward
+  - name: opensearch
     match: logs.*
-    host: fluentd
-    port: 24224
-    alias: forward-fluentd
+    host: opensearch
+    port: 9200
+    index: $log_group
+    tls: 'On'
+    tls.verify: 'Off'
+    alias: opensearch-logs
+    http_user: admin
+    http_passwd: admin
+    suppress_type_name: 'On'
