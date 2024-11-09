@@ -15,37 +15,43 @@ pipeline:
     port: 8888
     alias: http_input
     tag: logs.http
+    threaded: true
   - name: fluentbit_metrics
     tag: internal_metrics
     scrape_interval: 2
   filters:
+  # check the log field for the [AUDIT] string
+  - name: rewrite_tag
+    match_regex: ^logs(?!\.audit).*$
+    rule: $log ^.*[AUDIT].*$ logs.audit.$TAG false
+    emitter_name: audit_logs
   - name: parser
-    match: .*
+    match_regex: (logs).*
     key_name: log
     parser: default
-  # rename @log_group to log_group - easier to work with
+  # rename @log_group to log_group, unless log_group exists - easier to work with
   - name: modify
-    match: logs.*
+    match_regex: (logs).*
     condition:
     - Key_Exists @log_group
+    - Key_does_not_exist log_group
     rename:
     - '@log_group log_group'
   # check for log_group - if not present, add it
   - name: modify
-    match: logs.*
+    match_regex: (logs).*
     condition:
     - Key_Does_Not_Exist log_group
     set: 'log_group unset-log_group'
   # create custom prometheus counter for logs by log_group, the first flush intervala new 
   # value is seen it initializes the counter at 1 so count does not match with other systems _exactly_
   - name: log_to_metrics
-    match: logs.*
+    match_regex: (logs).*
     tag: counters.log_group
     metric_mode: counter
     metric_name: log_group_total
     metric_description: 'Total logs by log_group'
     label_field: 'log_group'
-    add_label: tag $tag
   outputs:
   # internal_metrics as prometheus exposes more metrics than built-in HTTP server
   - name: prometheus_exporter
@@ -54,7 +60,7 @@ pipeline:
     port: 2021
     alias: prometheus
   - name: opensearch
-    match: logs.*
+    match_regex: (logs).*
     host: opensearch
     port: 9200
     index: $log_group
@@ -64,3 +70,8 @@ pipeline:
     http_user: admin
     http_passwd: admin
     suppress_type_name: 'On'
+    compress: gzip
+    # need to determine if this means unlimited workers or none
+    workers: 0
+    generate_id: 'On'
+    trace_error: 'On'
