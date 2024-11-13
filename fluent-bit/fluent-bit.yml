@@ -52,7 +52,7 @@ pipeline:
     metric_name: log_group_total
     metric_description: 'Total logs by log_group'
     label_field: 'log_group'
-  # ensure this doesn't overwrite an existing logrouter_id
+  # ensure this doesn't overwrite an existing logrouter_id??
   # create an ID for each log entry, so we can reingest logs from s3 into Opensearch without duplicates
   - name: record_modifier
     match_regex: (logs).*
