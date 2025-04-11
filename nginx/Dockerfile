@@ -10,4 +10,3 @@ RUN mkdir -p /etc/nginx/ssl && \
     -keyout /etc/nginx/ssl/nginx.key \
     -out /etc/nginx/ssl/nginx.crt \
     -subj "/C=US/ST=State/L=City/O=Organization/OU=Department/CN=example.com"
-
