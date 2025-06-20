@@ -1,0 +1,25 @@
+api:
+  enabled: true
+  address: 0.0.0.0:8686
+sources:
+  demo_logs:
+    type: demo_logs
+    interval: 1
+    format: json
+sinks:
+  elasticsearch:
+    type: elasticsearch
+    inputs:
+    - demo_logs
+    endpoints:
+    - https://opensearch:9200
+    compression: gzip
+    api_version: auto
+    suppress_type_name: true
+    auth:
+      strategy: basic
+      user: admin
+      password: admin
+    tls:
+      verify_certificate: false
+      verify_hostname: false
