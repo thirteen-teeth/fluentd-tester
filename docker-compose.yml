@@ -62,7 +62,7 @@ services:
       - GF_AUTH_ANONYMOUS_USER_ORG_NAME=Main Org.
     command: ["--config=/etc/grafana/grafana.ini"]
   opensearch-node1: # This is also the hostname of the container within the Docker network (i.e. https://opensearch-node1/)
-    image: opensearchproject/opensearch:2.19.0 # Specifying the latest available image - modify if you want a specific version
+    build: ./opensearch # Use custom build with OTEL agent
     container_name: opensearch-node1
     environment:
       - cluster.name=opensearch-cluster # Name the cluster
@@ -70,8 +70,14 @@ services:
       - discovery.seed_hosts=opensearch-node1,opensearch-node2 # Nodes to look for when discovering the cluster
       - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2 # Nodes eligible to serve as cluster manager
       - bootstrap.memory_lock=true # Disable JVM heap memory swapping
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m" # Set min and max JVM heap sizes to at least 50% of system RAM
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m -javaagent:/usr/share/opensearch/lib/opentelemetry-javaagent.jar -Dotel.javaagent.enabled=true -Dotel.javaagent.experimental.security-manager=true" # Set min and max JVM heap sizes and OTEL agent
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}    # Sets the demo admin user password when using demo configuration, required for OpenSearch 2.12 and later
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:14268 # Jaeger OTLP HTTP endpoint
+      - OTEL_SERVICE_NAME=opensearch-node1
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=opensearch-node1,service.version=2.19.0
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
     ulimits:
       memlock:
         soft: -1 # Set memlock to unlimited (no soft or hard limit)
@@ -83,7 +89,7 @@ services:
       - 9200:9200 # REST API
       - 9600:9600 # Performance Analyzer
   opensearch-node2:
-    image: opensearchproject/opensearch:2.19.0 # This should be the same image used for opensearch-node1 to avoid issues
+    build: ./opensearch # Use custom build with OTEL agent
     container_name: opensearch-node2
     environment:
       - cluster.name=opensearch-cluster
@@ -91,8 +97,14 @@ services:
       - discovery.seed_hosts=opensearch-node1,opensearch-node2
       - cluster.initial_cluster_manager_nodes=opensearch-node1,opensearch-node2
       - bootstrap.memory_lock=true
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m -javaagent:/usr/share/opensearch/lib/opentelemetry-javaagent.jar -Dotel.javaagent.enabled=true -Djava.security.manager=default" # OTEL agent with default security
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_INITIAL_ADMIN_PASSWORD}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:14268 # Jaeger OTLP HTTP endpoint
+      - OTEL_SERVICE_NAME=opensearch-node2
+      - OTEL_RESOURCE_ATTRIBUTES=service.name=opensearch-node2,service.version=2.19.0
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=none
+      - OTEL_LOGS_EXPORTER=none
     ulimits:
       memlock:
         soft: -1
@@ -147,3 +159,17 @@ services:
       - "8686:8686"
     environment:
       - VECTOR_LOG=debug
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "14268:14268"  # HTTP collector
+      - "14250:14250"  # gRPC collector
+      - "6831:6831/udp"  # UDP agent port for compact thrift protocol
+      - "6832:6832/udp"  # UDP agent port for binary thrift protocol
+      - "5778:5778"   # Config server HTTP port
+      - "5775:5775/udp"  # UDP agent port for zipkin thrift protocol (deprecated)
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
