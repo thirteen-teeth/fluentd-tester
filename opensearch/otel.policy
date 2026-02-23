@@ -1,4 +1,0 @@
-grant {
-    # Allow all permissions for OpenTelemetry agent
-    permission java.security.AllPermission;
-};

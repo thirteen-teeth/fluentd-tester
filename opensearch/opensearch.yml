@@ -1,0 +1,8 @@
+---
+# Bind to all interfaces so the container is reachable
+network.host: 0.0.0.0
+
+# Enable the native OpenTelemetry telemetry plugin (bundled via Dockerfile)
+# NodeScope/Final - cannot be set via env var, must be in this file
+telemetry.feature.tracer.enabled: true
+telemetry.otel.tracer.span.exporter.class: io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
